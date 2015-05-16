@@ -1,64 +1,89 @@
 module.exports = {
-	buildRoads: function(from, to)
+	buildRoads: function(tgtRoom, from, to)
 	{
-		var path = Game.getRoom('1-1').findPath(from, to, { ignoreCreeps: true });
+		var path = tgtRoom.findPath(from, to, { ignoreCreeps: true });
 		for(var i in path)
 		{
-			var result = Game.getRoom('1-1').createConstructionSite(path[i].x, path[i].y, Game.STRUCTURE_ROAD);
+			var result = tgtRoom.createConstructionSite(path[i].x, path[i].y, STRUCTURE_ROAD);
 		}
 	},
 
-	buildRoadToAllSources: function()
+	buildRoadToAllSources: function(tgtSpawn, tgtRoom)
 	{
-		var sources = Game.spawns.Spawn1.room.find(Game.SOURCES);
-
+		var sources = tgtRoom.find(FIND_SOURCES_ACTIVE);
+        var positions = [];
 		for(var i in sources)
 		{
-			this.buildRoads(Game.spawns.Spawn1.pos, sources[i].pos);
+    		var path = tgtRoom.findPath(tgtSpawn.pos, sources[i].pos, { ignoreCreeps: true });
+    		this.updatePositionsArray(path, positions);
+		}
+	    for(var indexOfPosition in positions) {
+    		var result = tgtRoom.createConstructionSite(positions[indexOfPosition], STRUCTURE_ROAD);
+	    }
+	},
+	expandRampartsOutwards: function(tgtRoom) {
+		var ramparts = tgtRoom.find(FIND_MY_STRUCTURES, {
+			filter: {structureType: STRUCTURE_RAMPART}
+		});
+		for(var i in ramparts) {
+			var rampart = ramparts[i];
+			var rampartPositions = [];
+			var newPositions = [];
+			var possibleRampartPositions = [
+				{x: rampart.pos.x - 1, y: rampart.pos.y},
+				{x: rampart.pos.x - 1, y: rampart.pos.y - 1},
+				{x: rampart.pos.x - 1, y: rampart.pos.y + 1},
+				{x: rampart.pos.x, y: rampart.pos.y - 1},
+				{x: rampart.pos.x, y: rampart.pos.y + 1},
+				{x: rampart.pos.x + 1, y: rampart.pos.y - 1},
+				{x: rampart.pos.x + 1, y: rampart.pos.y},
+				{x: rampart.pos.x + 1, y: rampart.pos.y + 1}
+			];
+			for(var indexOfPossibleRampartPositions in possibleRampartPositions) {
+				var currentRampartPosition = possibleRampartPositions[indexOfPossibleRampartPositions];
+				var tile = tgtRoom.lookAt(currentRampartPosition);
+				var build = true;
+				for(var tileItem in tile) {
+					var thing = tile[tileItem];
+					if(thing.type === 'constructionSite') build = false;
+					if(thing.type === 'spawn') build = false;
+					if(thing.type === 'structure' && thing.structure.structureType === STRUCTURE_RAMPART) build = false;
+				}
+				if(build) {
+				    newPositions.push(currentRampartPosition);
+				}
+			}
+			this.updatePositionsArray(newPositions, rampartPositions);
+			for(var indexOfRampartPositions in rampartPositions) {
+			    var currentNewRampartPosition = rampartPositions[indexOfRampartPositions];
+				var result = tgtRoom.createConstructionSite(currentNewRampartPosition.x, currentNewRampartPosition.y, STRUCTURE_RAMPART);
+				if(result !== 0) {
+				    console.log('Result(' + currentNewRampartPosition.x + ',' + currentNewRampartPosition.y + '): ' + result);
+    				for(var tileItem in tile) {
+        				console.log(tile[tileItem]);
+    				}
+				}
+			}
 		}
 	},
-
-	expandRampartsOutwards: function()
-	{
-		var ramparts = Game.getRoom('1-1').find(Game.MY_STRUCTURES, {
-			filter: function(struct)
-			{
-				return struct.structureType == Game.STRUCTURE_RAMPART
-			}
-		});
-
-		for(var i in ramparts)
-		{
-			var rampart = ramparts[i];
-
-			var positions = [
-				[rampart.pos.x - 1, rampart.pos.y],
-				[rampart.pos.x, rampart.pos.y - 1],
-				[rampart.pos.x, rampart.pos.y - 1],
-				[rampart.pos.x, rampart.pos.y + 1],
-				[rampart.pos.x - 1, rampart.pos.y - 1],
-				[rampart.pos.x + 1, rampart.pos.y - 1],
-				[rampart.pos.x - 1, rampart.pos.y + 1],
-				[rampart.pos.x - 1, rampart.pos.y - 1]
-			];
-
-			for(var i in positions)
-			{
-				var pos = positions[i];
-				var tile = Game.getRoom('1-1').lookAt(pos[0], pos[1]);
-				var build = true;
-				for(var tilei in tile)
-				{
-					var thing = tile[tilei];
-					if(thing.type == 'structure' && thing.structure.structureType == Game.STRUCTURE_RAMPART)
-						build = false;
-					if(thing.type == 'constructionSite')
-						build = false;
-				}
-
-				if(build)
-					Game.getRoom('1-1').createConstructionSite(pos[0], pos[1], Game.STRUCTURE_RAMPART);
-			}
-		}
+	clearConstructionSites: function(tgtRoom) {
+	    var constructionSites = tgtRoom.find(FIND_CONSTRUCTION_SITES);
+	    for(var indexOfSite in constructionSites) {
+	        constructionSites[indexOfSite].remove();
+	    }
+	},
+	updatePositionsArray: function(newPositions, positions){
+	    for(var indexOfNewPositions in newPositions) {
+	        var currentNewPosition = newPositions[indexOfNewPositions];
+	        var addPos = true;
+	        for(var indexOfPosition in positions) {
+	            var currentPosition = positions[indexOfPosition]
+	            if(currentPosition.x === currentNewPosition.x && currentPosition.y === currentNewPosition.y) {
+	                addPos = false;
+	                break;
+	            }
+	        } 
+		    if(addPos) positions.push(currentNewPosition);
+	    }
 	}
 };
