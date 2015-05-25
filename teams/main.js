@@ -1,9 +1,3 @@
-if(Memory.workForceQuota === undefined) {
-    Memory.workForceQuota = {h1: 0, b1: 0, g1: 0, r1:1, min:3, run:8, bld:3};
-}
-if(Memory.siteQuota === undefined) {
-    Memory.siteQuota = {src:4,ctrl:4};
-}
 
 if(Memory.partDefinitions === undefined) {
     Memory.partDefinitions = {
@@ -50,14 +44,11 @@ if(Memory.partDefinitions === undefined) {
     };
 }
 
-var roomManager = require('room');
-
-var DoACreepCheck = false;
-var counter = Game.time % 1000;
-if(counter%20 == 0) DoACreepCheck = true;
-
+var roomManager = require('roomManager');
+var helper = require('helper');
 
 for(var name in Game.rooms) {
     var roomObj = Game.rooms[name];
-    roomManager(roomObj, DoACreepCheck);
+    //var flag = 0; // Nothing unusual, not sure if it will ever be used...
+    roomManager(roomObj, helper);
 }
