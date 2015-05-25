@@ -31,6 +31,8 @@
                 mController.paths.sources[sourceName] = pathToTarget;
             }
         }
+        //Open Spaces...
+        mSourceList[sourceName].openings = helper.position.getOpenPositions(roomObj, currentSource.pos);
     }
     /*
      * Are sources by Source Keeper Lair?  Need to mark and leave alone for now, 

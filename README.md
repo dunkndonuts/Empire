@@ -27,3 +27,9 @@ Creep States Miner
 0 - Idle
 10 - Mining
 20 - Travelling to Source
+
+Miner for each available spot to sources not next to lairs
+First Miner created and assigned to closest available spot to spawn.
+Second Miner created and assigned to closest spot to controller.
+First Blder created and assigned to closest available spot to controller.
+Teams
